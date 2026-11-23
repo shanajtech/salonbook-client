@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { createAuthClient } from 'better-auth/react';
 import { jwtClient } from 'better-auth/client/plugins';
 
@@ -54,20 +54,22 @@ function Cards({ resource, featured }) {
 function Catalog({ home }) {
   const [search,setSearch]=useState('');
   const [category,setCategory]=useState('');
-  const pathname=usePathname();
-  useEffect(()=>{setCategory(new URLSearchParams(window.location.search).get('category')||'');},[pathname,home]);
+  const queryCategory=useSearchParams().get('category')||'';
+  useEffect(()=>{setCategory(queryCategory);},[queryCategory]);
   const [sort,setSort]=useState('');
   const params = new URLSearchParams({search,category,sort});
   const resource=useResource('/services?'+params,false);
+  const availableCategories=[...new Set((resource.data||[]).map(service=>service.category))];
+  const heroImage=resource.data?.find(service=>service.image)?.image;
   return <>{home && <section className="hero"><div><span className="eyebrow">SALON APPOINTMENTS</span>
     <h1>Make time<br/>for yourself.</h1><p>Find your next haircut, treatment or quiet moment and book it in a few clicks.</p>
-    <Link className="button" href="/services">Explore salon services ↗</Link></div><div className="hero-art" aria-hidden="true">✳</div></section>}
+    <Link className="button" href="/services">Explore salon services ↗</Link></div><div className="hero-art" aria-hidden="true">{heroImage?<img src={heroImage} alt=""/>:"✳"}</div></section>}
     <section className="section"><h2>{home?'Featured services':'Browse services'}</h2>
     {!home && <div className="filters"><input aria-label="Search by name" placeholder="Search services" value={search} onChange={e=>setSearch(e.target.value)}/>
     <select aria-label="Category" value={category} onChange={e=>setCategory(e.target.value)}><option value="">All categories</option>{categories.map(c=><option key={c}>{c}</option>)}</select>
     <select aria-label="Sort by price" value={sort} onChange={e=>setSort(e.target.value)}><option value="">Latest</option><option value="asc">Price low to high</option><option value="desc">Price high to low</option></select></div>}
     <Cards resource={resource} featured={home}/></section>
-    {home && <><section className="section"><h2>Browse by category</h2><div className="chips">{categories.map(c=><Link key={c} href={'/services?category='+encodeURIComponent(c)}>{c}</Link>)}</div></section>
+    {home && <><section className="section"><h2>Browse by category</h2><div className="chips">{availableCategories.map(c=><Link key={c} href={'/services?category='+encodeURIComponent(c)}>{c}</Link>)}</div></section>
     <section className="section"><h2>How booking works</h2><p>Choose a service, request a time, and pay once the salon confirms your appointment.</p></section></>}</>;
 }
 function Login({ signup, notify }) {
@@ -172,11 +174,12 @@ export default function SalonBook(){
   useEffect(()=>{if(isPending)return;if((dashboard||details)&&!user)router.replace('/sign-in');else if(dashboard&&sub!==(admin?'admin':'customer'))router.replace(dash);},[isPending,user,dashboard,details,sub,admin,dash,router]);
   return <><header><Link href="/" className="logo"><span>✳</span> SalonBook</Link><nav><Link href="/">Home</Link><Link href="/services">Browse Services</Link>
     {user?<details><summary>{user.name}</summary><div><Link href={dash}>Dashboard</Link><button className="secondary" onClick={async()=>{await auth.signOut();router.push('/');}}>Logout</button></div></details>:<><Link href="/sign-in">Sign In</Link><Link href="/sign-up" className="button">Sign Up</Link></>}</nav></header>
-    <main>{!main&&<Catalog home/>}{main==='services'&&!details&&<Catalog/>}{details&&(user?<Details id={sub} user={user} notify={notify}/>:<p className="section">Checking session…</p>)}
+    <main><Suspense fallback={<p className="section">Loading services…</p>}>{!main&&<Catalog home/>}{main==='services'&&!details&&<Catalog/>}</Suspense>{details&&(user?<Details id={sub} user={user} notify={notify}/>:<p className="section">Checking session…</p>)}
     {['sign-in','sign-up'].includes(main)&&<Login signup={main==='sign-up'} notify={notify}/>}
     {dashboard&&(user&&sub===(admin?'admin':'customer')?<Dashboard admin={admin} user={user} notify={notify} section={section}/>:<p className="section">Checking access…</p>)}
     {main==='payment'&&<section className="section"><h1>{sub==='success'?'Payment received':'Checkout cancelled'}</h1><p>{sub==='success'?'Stripe verification will update your booking shortly.':'You can return to your appointment and try again.'}</p><Link className="button" href="/dashboard/customer/my-appointments">My appointments</Link></section>}</main>
-    <footer><div><Link href="/" className="logo">SalonBook</Link><p>Salon appointments made simple.</p></div><div><Link href="/services">Browse services</Link><p>Dhaka, Bangladesh · 9am–6pm</p><p>hello@salonbook.example</p></div><small>© SalonBook</small></footer>
+    <footer><div><Link href="/" className="logo">SalonBook</Link><p>Salon appointments made simple.</p></div><div><Link href="/services">Browse services</Link><p><Link href="/sign-in">Sign in</Link></p><p>Dhaka, Bangladesh · 9am–6pm</p><p>hello@salonbook.example</p></div><small>© SalonBook</small></footer>
     {toast&&<div className="toast" role="status">{toast}</div>}</>;
 }
+
 
