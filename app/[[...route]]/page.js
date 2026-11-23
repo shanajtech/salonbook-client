@@ -8,6 +8,7 @@ import { jwtClient } from 'better-auth/client/plugins';
 const base = process.env.NEXT_PUBLIC_API_URL || '';
 const auth = createAuthClient({ ...(base ? { baseURL: base } : {}), plugins: [jwtClient()] });
 const categories = ['Haircut & Styling','Hair Coloring','Hair Treatment','Facial & Skincare','Makeup','Manicure & Pedicure','Spa & Massage'];
+const socialLinks = [['Instagram',process.env.NEXT_PUBLIC_SALON_INSTAGRAM_URL],['Facebook',process.env.NEXT_PUBLIC_SALON_FACEBOOK_URL]].filter(([,url])=>url && URL.canParse(url) && new URL(url).protocol==='https:');
 const slots = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00'];
 const empty = { serviceName:'',category:categories[0],description:'',price:'',duration:'',image:'',status:'active' };
 const money = value => '$' + Number(value).toFixed(2);
@@ -60,7 +61,7 @@ function Catalog({ home }) {
   const params = new URLSearchParams({search,category,sort});
   const resource=useResource('/services?'+params,false);
   const availableCategories=[...new Set((resource.data||[]).map(service=>service.category))];
-  const heroImage=resource.data?.find(service=>service.image)?.image;
+  const heroImage=process.env.NEXT_PUBLIC_SALON_BANNER_URL || resource.data?.find(service=>service.image)?.image;
   return <>{home && <section className="hero"><div><span className="eyebrow">SALON APPOINTMENTS</span>
     <h1>Make time<br/>for yourself.</h1><p>Find your next haircut, treatment or quiet moment and book it in a few clicks.</p>
     <Link className="button" href="/services">Explore salon services ↗</Link></div><div className="hero-art" aria-hidden="true">{heroImage?<img src={heroImage} alt=""/>:"✳"}</div></section>}
@@ -185,10 +186,11 @@ export default function SalonBook(){
     <main><Suspense fallback={<p className="section">Loading services…</p>}>{!main&&<Catalog home/>}{main==='services'&&!details&&<Catalog/>}</Suspense>{details&&(user?<Details id={sub} user={user} notify={notify}/>:<p className="section">Checking session…</p>)}
     {['sign-in','sign-up'].includes(main)&&<Login signup={main==='sign-up'} notify={notify}/>}
     {dashboard&&(user&&sub===(admin?'admin':'customer')?<Dashboard admin={admin} user={user} notify={notify} section={section}/>:<p className="section">Checking access…</p>)}
-    {main==='payment'&&<section className="section"><h1>{sub==='success'?'Payment received':'Checkout cancelled'}</h1><p>{sub==='success'?'Stripe verification will update your booking shortly.':'You can return to your appointment and try again.'}</p><Link className="button" href="/dashboard/customer/my-appointments">My appointments</Link></section>}</main>
-    <footer><div><Link href="/" className="logo">SalonBook</Link><p>Salon appointments made simple.</p></div><div><Link href="/services">Browse services</Link><p><Link href="/sign-in">Sign in</Link></p><p>Dhaka, Bangladesh · 9am–6pm</p><p>hello@salonbook.example</p></div><small>© SalonBook</small></footer>
+    {main==='payment'&&<section className="section"><h1>{sub==='success'?'Verifying your payment':'Checkout cancelled'}</h1><p>{sub==='success'?'Stripe verification will update your booking shortly.':'You can return to your appointment and try again.'}</p><Link className="button" href="/dashboard/customer/my-appointments">My appointments</Link></section>}</main>
+    <footer><div><Link href="/" className="logo">SalonBook</Link><p>Salon appointments made simple.</p></div><div><Link href="/services">Browse services</Link><p><Link href="/sign-in">Sign in</Link></p><p>Dhaka, Bangladesh · 9am–6pm</p><p><a href="mailto:hello@salonbook.example">hello@salonbook.example</a></p>{socialLinks.length>0&&<nav aria-label="Social media">{socialLinks.map(([name,url])=><a key={name} href={url}>{name}</a>)}</nav>}</div><small>© SalonBook</small></footer>
     {toast&&<div className="toast" role="status">{toast}</div>}</>;
 }
+
 
 
 
