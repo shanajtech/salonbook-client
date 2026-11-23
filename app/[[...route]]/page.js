@@ -117,13 +117,13 @@ function Dashboard({ admin, user, notify, section }) {
   const bookings=useResource(admin?'/admin/appointments':'/appointments',true,revision);
   const services=useResource(admin?'/admin/services':null,true,revision);
   const users=useResource(admin?'/admin/users':null,true,revision);
-  const payments=useResource(admin?'/admin/transactions':null,true,revision);
+  const payments=useResource(admin?'/admin/transactions':'/transactions',true,revision);
   const menu=admin?['Overview','Manage Services','Add Service','Manage Appointments','Manage Users','Transactions','My Profile']:['Overview','My Appointments','My Profile'];
   const slug=x=>x.toLowerCase().replaceAll(' ','-');
   const root='/dashboard/'+(admin?'admin':'customer');
   const action=async(path,method,body) => {setBusy(true);try{const result=await api(path,{private:true,method,body});if(result?.url)location.assign(result.url); else {notify('Changes saved');refresh(x=>x+1);}return true;}catch(err){notify(err.message);return false;}finally{setBusy(false);}};
   const counts=[['Total appointments',bookings.data?.length],...['pending','confirmed','cancelled'].map(x=>[x,bookings.data?.filter(row=>row.status===x).length])];
-  if(admin)counts.push(['Registered customers',users.data?.length],['Active services',services.data?.filter(row=>row.status==='active').length],['Successful payments',payments.data?.length]);
+  if(admin)counts.push(['Registered customers',users.data?.length],['Active services',services.data?.filter(row=>row.status==='active').length],['Successful payments',payments.data?.filter(row=>row.status==='paid').length]);
   async function saveService(e){
     e.preventDefault();const form=Object.fromEntries(new FormData(e.currentTarget));setBusy(true);
     try{
@@ -159,6 +159,14 @@ function Dashboard({ admin, user, notify, section }) {
       <label>Status<select name="status" defaultValue={entry.status}><option>active</option><option>inactive</option></select></label>
       <button disabled={busy}>{busy?'Saving…':current?'Update service':'Add service'}</button></form>}
     {admin&&section==='manage-users'&&users.data?.map(row=><article className="card card-body" key={row._id}><h3>{row.name}</h3><p>{row.email}</p><button disabled={busy} onClick={()=>action('/admin/users/'+row._id,'PATCH',{blocked:!row.banned})}>{row.banned?'Unblock':'Block'}</button></article>)}
+    {!admin&&section==='my-appointments'&&<section className="payment-history"><h2>Payment history</h2>
+      {!payments.data&&!payments.error&&<p role="status">Loading payments...</p>}
+      {payments.data?.length===0&&<p>No transactions yet.</p>}
+      {payments.data?.map(row=><article className="card card-body" key={row._id}>
+        <h3>{row.appointment?.serviceName||'Salon appointment'}</h3>
+        <p>{(row.amount/100).toFixed(2)} {row.currency.toUpperCase()} · {new Date(row.createdAt).toLocaleDateString()}</p>
+        <span className="badge">{row.status}</span>
+      </article>)}</section>}
     {admin&&section==='transactions'&&payments.data?.map(row=><article className="card card-body" key={row._id}><h3>{row.appointment?.serviceName}</h3><p>{row.appointment?.customerName} · {row.appointment?.appointmentDate}</p><p>{(row.amount/100).toFixed(2)} {row.currency.toUpperCase()} · {row.status} · {new Date(row.createdAt).toLocaleDateString()}</p><small>{row.stripeSessionId}</small></article>)}
   </section></div>;
 }
@@ -181,5 +189,6 @@ export default function SalonBook(){
     <footer><div><Link href="/" className="logo">SalonBook</Link><p>Salon appointments made simple.</p></div><div><Link href="/services">Browse services</Link><p><Link href="/sign-in">Sign in</Link></p><p>Dhaka, Bangladesh · 9am–6pm</p><p>hello@salonbook.example</p></div><small>© SalonBook</small></footer>
     {toast&&<div className="toast" role="status">{toast}</div>}</>;
 }
+
 
 
