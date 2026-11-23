@@ -5,8 +5,8 @@ import { Suspense, useEffect, useState } from 'react';
 import { createAuthClient } from 'better-auth/react';
 import { jwtClient } from 'better-auth/client/plugins';
 
-const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-const auth = createAuthClient({ baseURL: base, plugins: [jwtClient()] });
+const base = process.env.NEXT_PUBLIC_API_URL || '';
+const auth = createAuthClient({ ...(base ? { baseURL: base } : {}), plugins: [jwtClient()] });
 const categories = ['Haircut & Styling','Hair Coloring','Hair Treatment','Facial & Skincare','Makeup','Manicure & Pedicure','Spa & Massage'];
 const slots = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00'];
 const empty = { serviceName:'',category:categories[0],description:'',price:'',duration:'',image:'',status:'active' };
@@ -189,6 +189,7 @@ export default function SalonBook(){
     <footer><div><Link href="/" className="logo">SalonBook</Link><p>Salon appointments made simple.</p></div><div><Link href="/services">Browse services</Link><p><Link href="/sign-in">Sign in</Link></p><p>Dhaka, Bangladesh · 9am–6pm</p><p>hello@salonbook.example</p></div><small>© SalonBook</small></footer>
     {toast&&<div className="toast" role="status">{toast}</div>}</>;
 }
+
 
 
 
