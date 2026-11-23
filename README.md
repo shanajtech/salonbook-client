@@ -12,3 +12,13 @@ The live service cards come from MongoDB through the API. Add six active service
 
 Add the live site and both GitHub repository links after deployment.
 
+## Assignment 9 handoff
+
+- Client: https://github.com/shanajtech/salonbook-client
+- Server: https://github.com/shanajtech/salonbook-server
+- Assignment: https://web.programming-hero.com/web-14/assignment/web-14-assignment-9
+
+Implemented: homepage, service filters, Better Auth forms, customer and admin dashboard screens, booking actions, service image upload UI and checkout return pages.
+
+Still to verify: configure the server and external integrations, create six active services with salon photos, test both account roles, verify mobile and production route refresh, and test Stripe Checkout and webhook delivery. Remaining rubric gaps include footer social links and a dedicated salon banner photo. Add the live URL here after deployment. The 20 meaningful client commits and 12 meaningful server commits remain rubric targets.
+
