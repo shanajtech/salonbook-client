@@ -136,11 +136,20 @@ function Dashboard({ admin, user, notify, section }) {
     }catch(err){notify(err.message);}finally{setBusy(false);}
   }
   const entry=current||empty;
-  return <div className="dashboard"><aside><h2>{admin?'Admin':'Customer'}</h2>{menu.map(x=><Link key={x} href={root+'/'+slug(x)}>{x}</Link>)}</aside>
+  const panel = {
+    'manage-services': [services, 'services'],
+    'manage-users': [users, 'customers'],
+    'transactions': [payments, 'transactions'],
+    'manage-appointments': [bookings, 'appointments'],
+    'my-appointments': [bookings, 'appointments'],
+  }[section];
+  return <div className="dashboard"><aside><h2>{admin?'Admin':'Customer'}</h2>{menu.map(x=><Link key={x} aria-current={(section||'overview')===slug(x)?'page':undefined} href={root+'/'+slug(x)}>{x}</Link>)}</aside>
     <section className="dashboard-main"><h1>{menu.find(x=>slug(x)===section)||'Overview'}</h1>
     {Object.entries({bookings,services,users,payments}).map(([k,v])=>v.error&&<p role="alert" key={k}>{v.error}</p>)}
     {(!section||section==='overview')&&<div className="grid">{counts.map(([label,count])=><article className="card card-body" key={label}><small>{label}</small><h2>{count??'…'}</h2></article>)}</div>}
     {section==='my-profile'&&<Profile user={user} notify={notify}/>}
+    {panel&&!panel[0].data&&!panel[0].error&&<p role="status">Loading {panel[1]}...</p>}
+    {panel&&panel[1]!=='appointments'&&panel[0].data?.length===0&&<p>No {panel[1]} yet.</p>}
     {['manage-appointments','my-appointments'].includes(section)&&<div className="records">{bookings.data?.map(row=><article className="card card-body" key={row._id}>
       {row.image&&<img className='appointment-image' src={row.image} alt=''/>}<h3>{row.serviceName}</h3>{admin&&<p>{row.customerName} · {row.customerEmail}</p>}<p>{row.category} · {row.appointmentDate} · {row.timeSlot} · {money(row.servicePrice)}</p><p><span className="badge">{row.status}</span> <span className="badge">{row.paymentStatus}</span></p>
       <details><summary>Booking details</summary><p>Requested {new Date(row.createdAt).toLocaleDateString()}</p><p>{row.message||'No message'}</p></details>
@@ -190,6 +199,7 @@ export default function SalonBook(){
     <footer><div><Link href="/" className="logo">SalonBook</Link><p>Salon appointments made simple.</p></div><div><Link href="/services">Browse services</Link><p><Link href="/sign-in">Sign in</Link></p><p>Dhaka, Bangladesh · 9am–6pm</p><p><a href="mailto:hello@salonbook.example">hello@salonbook.example</a></p>{socialLinks.length>0&&<nav aria-label="Social media">{socialLinks.map(([name,url])=><a key={name} href={url}>{name}</a>)}</nav>}</div><small>© SalonBook</small></footer>
     {toast&&<div className="toast" role="status">{toast}</div>}</>;
 }
+
 
 
 
