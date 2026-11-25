@@ -24,8 +24,9 @@ async function api(path, options = {}) {
   try { response = await fetch(base + '/api' + path, { ...init, headers, body:body ? JSON.stringify(body) : undefined }); }
   catch { throw new Error('The booking server is unavailable. Please try again shortly.'); }
   if (response.status === 204) return;
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Request failed');
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(data?.error || 'The booking server could not complete this request. Try again shortly.');
+  if (data === null) throw new Error('The booking server returned an unexpected response.');
   return data;
 }
 function useResource(path, access, revision = 0) {
@@ -75,6 +76,7 @@ function Catalog({ home }) {
 }
 function Login({ signup, notify }) {
   const router=useRouter();
+  const { data:config }=useResource('/config',false);
   async function submit(e) {
     e.preventDefault(); const form=Object.fromEntries(new FormData(e.currentTarget));
     if(signup && !/^(?=.*[a-z])(?=.*[A-Z]).{6,}$/.test(form.password)) return notify('Use at least six characters with uppercase and lowercase letters');
@@ -88,7 +90,7 @@ function Login({ signup, notify }) {
   return <section className="section narrow"><h1>{signup?'Create an account':'Sign in'}</h1><form onSubmit={submit}>
     {signup&&<label>Full name<input name="name" required/></label>}<label>Email<input name="email" type="email" required/></label>
     <label>Password<input name="password" type="password" required/></label>{signup&&<label>Profile image URL<input name="image" type="url"/></label>}
-    <button>{signup?'Sign up':'Sign in'}</button><button type="button" className="secondary" onClick={async()=>{try {const result=await auth.signIn.social({provider:'google',callbackURL:location.origin+'/dashboard'});if(result.error)notify(result.error.message);}catch(err){notify(err.message);}}}>Continue with Google</button>
+    <button>{signup?'Sign up':'Sign in'}</button>{config?.googleSignIn&&<button type="button" className="secondary" onClick={async()=>{try {const result=await auth.signIn.social({provider:'google',callbackURL:location.origin+'/dashboard'});if(result.error)notify(result.error.message);}catch(err){notify(err.message);}}}>Continue with Google</button>}
   </form></section>;
 }
 function Details({ id, user, notify }) {
@@ -101,7 +103,7 @@ function Details({ id, user, notify }) {
   }
   if(error)return <section className="section" role="alert">{error}</section>;
   if(!data)return <p className="section" role="status">Loading service…</p>;
-  return <section className="section details"><div><img src={data.image} alt=""/><h1>{data.serviceName}</h1><p>{data.description}</p><p>{money(data.price)} · {data.duration} min</p></div>
+  return <section className="section details"><div><img src={data.image} alt=""/><h1>{data.serviceName}</h1><p className="badge">{data.category}</p><p>{data.description}</p><p>{money(data.price)} · {data.duration} min</p></div>
     {user.role!=='admin'&&<form onSubmit={submit}><h2>Request an appointment</h2><label>Date<input name="appointmentDate" type="date" required/></label>
     <label>Time<select name="timeSlot">{slots.map(s=><option key={s}>{s}</option>)}</select></label><label>Message<textarea name="message" maxLength={500}/></label>
     <button disabled={busy}>{busy?'Sending…':'Request appointment'}</button></form>}</section>;
@@ -109,7 +111,7 @@ function Details({ id, user, notify }) {
 function Profile({user,notify}) {
   return <form onSubmit={async e=>{e.preventDefault();try{const result=await auth.updateUser(Object.fromEntries(new FormData(e.currentTarget)));if(result.error)throw new Error(result.error.message);notify('Profile saved');}catch(err){notify(err.message);}}}>
     <label>Name<input name="name" defaultValue={user.name} required/></label>
-    <label>Profile image URL<input name="image" type="url" defaultValue={user.image||''}/></label><button>Save profile</button></form>;
+    <label>Profile image URL<input name="image" type="url" defaultValue={user.image||''}/></label><label>Phone number<input name="phone" type="tel" autoComplete="tel" maxLength={24} defaultValue={user.phone||''}/></label><button>Save profile</button></form>;
 }
 function Dashboard({ admin, user, notify, section }) {
   const [revision,refresh]=useState(0);
