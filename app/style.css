@@ -9,3 +9,62 @@ form{display:grid;gap:1rem;max-width:560px}label{display:grid;gap:.4rem;font-siz
 .hero-art{overflow:hidden}.hero-art img{display:block;width:100%;height:100%;object-fit:cover}.chips:empty{display:none}
 .payment-history{margin-top:2rem}.payment-history h2{font-size:1.8rem}
 footer nav{display:flex;flex-wrap:wrap;gap:1rem}
+
+/* SalonBook visual theme */
+:root {
+  --ink: #2b2623;
+  --paper: #fcf8f2;
+  --green: #563a31;
+  --lime: #f3d9bd;
+  --line: #e7dbd0;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+header {
+  min-height: 72px;
+  background: #fffaf5;
+}
+.logo { font-size: 1.8rem; letter-spacing: -.06em; }
+.hero {
+  position: relative;
+  max-width: 1400px;
+  margin: 1.4rem auto 0;
+  width: 92%;
+  min-height: 490px;
+  grid-template-columns: 1.1fr 1fr;
+  gap: clamp(1.2rem, 5vw, 5rem);
+  background: linear-gradient(120deg, #422d28, #5d3d33 65%, #805c4e);
+}
+.hero .eyebrow { color: #f3d9bd; letter-spacing: .19em; }
+.hero p { color: #f5e7db; }
+.hero-art {
+  width: 100%;
+  max-width: 470px;
+  min-height: 0;
+  aspect-ratio: 1.12;
+  border: 1px solid #ecc9a975;
+  border-radius: 48% 48% 12px 12px;
+  background: radial-gradient(ellipse at 55% 28%, #f5ddc6, #c49177 56%, #926251);
+  color: #5f4035;
+}
+.hero-art img { object-position: center; }
+.button, button { border-radius: 999px; }
+.button:hover, button:hover:not(:disabled) { filter: brightness(.96); }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible { outline: 2px solid #986342; }
+.section { padding-block: clamp(2rem, 5vw, 4rem); }
+.grid { gap: clamp(.85rem, 2vw, 1.6rem); }
+.card { border-radius: 18px; background: #fffaf5; }
+.card img { height: auto; aspect-ratio: 4 / 3; display: block; }
+.card-body { padding: 1.25rem; }
+.card-body small { color: #7d5546; }
+.card a { color: #724938; }
+.chips a, .badge { background: #f4e5d8; }
+.dashboard aside a { padding: .55rem .65rem; border-radius: 8px; }
+.dashboard aside a:hover { background: #f4e5d8; }
+footer { background: #f1e5db; border-top: 1px solid var(--line); }
+@media (max-width: 700px) {
+  .hero { grid-template-columns: 1fr; min-height: 0; }
+  .hero-art { width: min(100%, 350px); justify-self: center; }
+  header nav { gap: .65rem; }
+  .filters input, .filters select { width: 100%; }
+}
